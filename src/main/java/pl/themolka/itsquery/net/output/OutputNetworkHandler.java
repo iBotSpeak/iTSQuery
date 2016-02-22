@@ -1,11 +1,16 @@
-package pl.themolka.itsquery.net;
+package pl.themolka.itsquery.net.output;
 
+import pl.themolka.itsquery.net.DataContainer;
+import pl.themolka.itsquery.net.INetworkHandler;
+import pl.themolka.itsquery.net.QueryData;
 import pl.themolka.itsquery.query.TSQuery;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class OutputNetworkHandler implements INetworkHandler {
+    public static final int NONE = Integer.MAX_VALUE;
+
     protected final TSQuery tsQuery;
 
     public OutputNetworkHandler(TSQuery tsQuery) {
@@ -14,7 +19,27 @@ public class OutputNetworkHandler implements INetworkHandler {
 
     @Override
     public void execute(String command, DataContainer container) {
+        StringBuilder builder = new StringBuilder();
 
+        for (QueryData data : container) {
+            for (String parameter : data.getFlags()) {
+                String value = data.getFlag(parameter);
+
+                if (value != null) {
+                    builder.append(" ").append(parameter).append("=").append(value);
+                }
+            }
+
+            for (int i = 0; i < data.getParamsLength(); i++) {
+                String option = data.getParam(i);
+
+                if (option != null) {
+                    builder.append("-").append(option);
+                }
+            }
+        }
+
+        this.tsQuery.getWriter().addQuery(command + builder.toString());
     }
 
     public final void execute(String command) {
@@ -26,7 +51,7 @@ public class OutputNetworkHandler implements INetworkHandler {
     }
 
     public final void execute(String command, Map<String, Object> data, Map<String, Boolean> options) {
-        this.execute(command, DataContainer.create(data, options));
+        this.execute(command, DataContainer.createOutput(data, options));
     }
 
     public final Map<String, Object> createData() {
@@ -34,7 +59,11 @@ public class OutputNetworkHandler implements INetworkHandler {
     }
 
     public final Map<String, Object> createData(Map<String, Object> data) {
-        return new HashMap<>(data);
+        if (data != null) {
+            return new HashMap<>(data);
+        }
+
+        return new HashMap<>();
     }
 
     public final Map<String, Boolean> createOptions() {

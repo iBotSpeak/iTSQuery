@@ -1,4 +1,4 @@
-package pl.themolka.itsquery.net;
+package pl.themolka.itsquery.net.output;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

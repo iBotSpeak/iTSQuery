@@ -1,4 +1,4 @@
-package pl.themolka.itsquery.net;
+package pl.themolka.itsquery.net.input;
 
 import pl.themolka.iserverquery.command.CommandSender;
 import pl.themolka.iserverquery.command.CommandSystem;
@@ -7,6 +7,9 @@ import pl.themolka.iserverquery.server.PrivilegeKeyEvent;
 import pl.themolka.iserverquery.text.GlobalMessageEvent;
 import pl.themolka.iserverquery.text.ImmutableMessage;
 import pl.themolka.iserverquery.text.PrivateMessageEvent;
+import pl.themolka.itsquery.net.DataContainer;
+import pl.themolka.itsquery.net.INetworkHandler;
+import pl.themolka.itsquery.net.QueryData;
 import pl.themolka.itsquery.query.TSQuery;
 
 public class InputNetworkHandler implements INetworkHandler {
@@ -173,7 +176,6 @@ public class InputNetworkHandler implements INetworkHandler {
 
             CommandSystem commands = this.tsQuery.getCommands();
             if (msg.startsWith(commands.getPrefix())) {
-
                 commands.handleCommand(sender, msg, new DefaultContextParser());
                 return;
             }

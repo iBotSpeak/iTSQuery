@@ -1,4 +1,4 @@
-package pl.themolka.itsquery.net;
+package pl.themolka.itsquery.net.input;
 
 import pl.themolka.iserverquery.event.Event;
 
