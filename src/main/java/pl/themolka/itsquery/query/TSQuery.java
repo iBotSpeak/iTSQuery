@@ -5,6 +5,7 @@ import pl.themolka.iserverquery.command.CommandSystem;
 import pl.themolka.iserverquery.event.EventSystem;
 import pl.themolka.iserverquery.query.*;
 import pl.themolka.iserverquery.server.Server;
+import pl.themolka.iserverquery.text.QueryTextEncoding;
 import pl.themolka.iserverquery.util.Platform;
 import pl.themolka.itsquery.net.input.InputNetworkHandler;
 import pl.themolka.itsquery.net.input.ReadQueryThread;
@@ -13,7 +14,7 @@ import pl.themolka.itsquery.net.output.WriteQueryThread;
 import pl.themolka.itsquery.server.TSServer;
 
 import java.io.IOException;
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.Charset;
 
@@ -21,7 +22,8 @@ public class TSQuery implements ServerQuery {
     public static final String BUILD = "Unknown";
     public static final String VERSION = "1.0-SNAPSHOT";
 
-    private final String build = BUILD;
+    private final InetSocketAddress address;
+    private String build = BUILD;
     private final CommandSystem commands;
     private final Charset encoding;
     private final EventSystem events;
@@ -32,17 +34,26 @@ public class TSQuery implements ServerQuery {
     private final ReadQueryThread reader;
     private final Server server;
     private final Socket socket;
-    private final String version = VERSION;
+    private final QueryTextEncoding textEncoding;
+    private String version = VERSION;
     private final WriteQueryThread writer;
 
     private boolean running;
-    private final Thread shutdownThread;
+    private final Thread shutdownHook;
 
     public TSQuery(String identifier, String host, int port) throws IOException {
-        this(Charset.defaultCharset(), identifier, host, port);
+        this(null, identifier, host, port);
     }
 
     public TSQuery(Charset encoding, String identifier, String host, int port) throws IOException {
+        if (encoding == null) {
+            encoding = Charset.defaultCharset();
+        }
+        if (identifier == null) {
+            identifier = "Default";
+        }
+
+        this.address = new InetSocketAddress(host, port);
         this.commands = new CommandSystem(this);
         this.encoding = encoding;
         this.events = new EventSystem(identifier);
@@ -52,16 +63,17 @@ public class TSQuery implements ServerQuery {
         this.platform = Platform.system();
         this.reader = new ReadQueryThread(this);
         this.server = new TSServer(this);
-        this.socket = new Socket(host, port);
+        this.socket = new Socket();
+        this.textEncoding = new QueryTextEncoding();
         this.writer = new WriteQueryThread(this);
 
-        this.shutdownThread = new Thread(new Runnable() {
+        this.shutdownHook = new Thread(new Runnable() {
             @Override
             public void run() {
                 TSQuery.this.stop();
             }
         }, identifier + " Shutdown Thread");
-        Runtime.getRuntime().addShutdownHook(this.shutdownThread);
+        Runtime.getRuntime().addShutdownHook(this.getShutdownHook());
     }
 
     @Override
@@ -85,8 +97,8 @@ public class TSQuery implements ServerQuery {
     }
 
     @Override
-    public InetAddress getHost() {
-        return this.getSocket().getInetAddress();
+    public InetSocketAddress getHost() {
+        return this.address;
     }
 
     @Override
@@ -100,11 +112,6 @@ public class TSQuery implements ServerQuery {
     }
 
     @Override
-    public int getPort() {
-        return this.getSocket().getPort();
-    }
-
-    @Override
     public Server getServer() {
         return this.server;
     }
@@ -112,6 +119,11 @@ public class TSQuery implements ServerQuery {
     @Override
     public Socket getSocket() {
         return this.socket;
+    }
+
+    @Override
+    public QueryTextEncoding getTextEncoding() {
+        return this.textEncoding;
     }
 
     @Override
@@ -132,18 +144,12 @@ public class TSQuery implements ServerQuery {
 
     @Override
     public void selectById(int serverId, boolean virtual) {
-        QuerySelectEvent event = new QuerySelectEvent(this, serverId, QuerySelectEvent.UNKNOWN);
-        this.getEvents().post(event);
-
-        this.getOutputHandler().use(event.getServerId(), event.getPort(), virtual);
+        this.select(serverId, QuerySelectEvent.UNKNOWN, virtual);
     }
 
     @Override
     public void selectByPort(int port, boolean virtual) {
-        QuerySelectEvent event = new QuerySelectEvent(this, QuerySelectEvent.UNKNOWN, port);
-        this.getEvents().post(event);
-
-        this.getOutputHandler().use(event.getServerId(), event.getPort(), virtual);
+        this.select(QuerySelectEvent.UNKNOWN, port, virtual);
     }
 
     @Override
@@ -155,6 +161,12 @@ public class TSQuery implements ServerQuery {
 
         QueryStartEvent event = new QueryStartEvent(this);
         this.getEvents().post(event);
+
+        try {
+            this.socket.connect(this.getHost());
+        } catch (Throwable ex) {
+            ex.printStackTrace();
+        }
 
         this.getReader().start();
         this.getWriter().start();
@@ -199,8 +211,8 @@ public class TSQuery implements ServerQuery {
         return this.reader;
     }
 
-    public Thread getShutdownThread() {
-        return this.shutdownThread;
+    public Thread getShutdownHook() {
+        return this.shutdownHook;
     }
 
     public WriteQueryThread getWriter() {
@@ -209,5 +221,30 @@ public class TSQuery implements ServerQuery {
 
     public boolean isRunning() {
         return this.running;
+    }
+
+    public void setBuild(String build) {
+        this.build = build;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    private void select(int serverId, int port, boolean virtual) {
+        QuerySelectEvent event = new QuerySelectEvent(this, port, serverId, virtual);
+        this.getEvents().post(event);
+
+        int preparedServerId = event.getServerId();
+        if (preparedServerId == QuerySelectEvent.UNKNOWN) {
+            preparedServerId = OutputNetworkHandler.NONE;
+        }
+
+        int preparedPort = event.getPort();
+        if (preparedPort == QuerySelectEvent.UNKNOWN) {
+            preparedPort = OutputNetworkHandler.NONE;
+        }
+
+        this.getOutputHandler().use(preparedServerId, preparedPort, event.isVirtual());
     }
 }

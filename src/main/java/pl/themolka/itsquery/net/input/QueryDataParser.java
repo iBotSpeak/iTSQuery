@@ -1,6 +1,8 @@
-package pl.themolka.itsquery.net;
+package pl.themolka.itsquery.net.input;
 
 import pl.themolka.iserverquery.command.Command;
+import pl.themolka.iserverquery.text.QueryTextEncoding;
+import pl.themolka.itsquery.net.QueryData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 public class QueryDataParser {
-    public static QueryData[] parse(String commandLine) {
+    public static QueryData[] parse(QueryTextEncoding encoder, String commandLine) {
         String[] name = commandLine.split("\\s", 2);
         QueryCommand command = new QueryCommand(name[0]);
 
@@ -34,7 +36,7 @@ public class QueryDataParser {
                         continue;
                     }
 
-                    parameters.put(keyValue[0], keyValue[1]);
+                    parameters.put(keyValue[0], encoder.decode(keyValue[1]));
                 } else {
                     options.add(arg);
                 }

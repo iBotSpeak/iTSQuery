@@ -26,7 +26,7 @@ public class OutputNetworkHandler implements INetworkHandler {
                 String value = data.getFlag(parameter);
 
                 if (value != null) {
-                    builder.append(" ").append(parameter).append("=").append(value);
+                    builder.append(" ").append(parameter).append("=").append(this.tsQuery.getTextEncoding().encode(value));
                 }
             }
 

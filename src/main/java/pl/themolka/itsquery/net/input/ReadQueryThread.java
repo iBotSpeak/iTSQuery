@@ -2,7 +2,6 @@ package pl.themolka.itsquery.net.input;
 
 import pl.themolka.itsquery.net.DataContainer;
 import pl.themolka.itsquery.net.QueryData;
-import pl.themolka.itsquery.net.QueryDataParser;
 import pl.themolka.itsquery.query.TSQuery;
 
 import java.io.BufferedReader;
@@ -14,7 +13,7 @@ public class ReadQueryThread extends Thread {
     protected final TSQuery tsQuery;
 
     public ReadQueryThread(TSQuery tsQuery) {
-        super("Read Query Thread");
+        super(tsQuery.getIdentifier() + " Read Thread");
 
         this.tsQuery = tsQuery;
     }
@@ -32,12 +31,11 @@ public class ReadQueryThread extends Thread {
                 }
 
                 try {
-                    QueryData[] contexts = QueryDataParser.parse(line);
+                    QueryData[] contexts = QueryDataParser.parse(this.tsQuery.getTextEncoding(), line);
                     if (contexts.length == 0) {
                         continue;
                     }
 
-                    System.out.println(line);
                     String command = contexts[0].getCommand().getCommand();
                     this.tsQuery.getInputHandler().execute(command, DataContainer.createInput(contexts));
                 } catch (Throwable ex) {

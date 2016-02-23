@@ -1,6 +1,7 @@
 package pl.themolka.itsquery.net;
 
 import pl.themolka.iserverquery.command.CommandContext;
+import pl.themolka.itsquery.net.input.QueryDataParser;
 
 import java.util.List;
 import java.util.Map;
