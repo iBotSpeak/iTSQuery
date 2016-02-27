@@ -35,6 +35,11 @@ public class TSServer implements Server {
     }
 
     @Override
+    public void createChannel(Channel channel) {
+
+    }
+
+    @Override
     public ConnectedClient findConnectedClient(String username) {
         for (ConnectedClient client : this.getConnectedClients()) {
             if (client.getUsername().toLowerCase().contains(username.toLowerCase())) {
@@ -66,9 +71,9 @@ public class TSServer implements Server {
     }
 
     @Override
-    public ConnectedClient getConnectedClient(int databaseId) {
+    public ConnectedClient getConnectedClient(int id) {
         for (ConnectedClient client : this.getConnectedClients()) {
-            if (client.getDatabaseId() == databaseId) {
+            if (client.getId() == id) {
                 return client;
             }
         }
@@ -100,7 +105,7 @@ public class TSServer implements Server {
 
     @Override
     public Collection<ConnectedClient> getConnectedClients() {
-        return this.connectedClients;
+        return new HashSet<>(this.connectedClients);
     }
 
     @Override
@@ -116,5 +121,17 @@ public class TSServer implements Server {
     @Override
     public int getSlots() {
         return this.slots;
+    }
+
+    public void registerClient(ConnectedClient client) {
+        if (this.connectedClients.contains(client)) {
+            return;
+        }
+
+        this.connectedClients.add(client);
+    }
+
+    public void unregisterClient(ConnectedClient client) {
+        this.connectedClients.remove(client);
     }
 }

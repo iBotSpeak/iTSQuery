@@ -3,8 +3,6 @@ package pl.themolka.itsquery.net.input;
 import pl.themolka.iserverquery.event.Event;
 
 public class InputErrorEvent extends Event {
-    public static final int INPUT_EVENT_ID = 0;
-
     private final int id;
     private final String message;
 

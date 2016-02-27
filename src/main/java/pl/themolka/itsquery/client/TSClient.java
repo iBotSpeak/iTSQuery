@@ -51,6 +51,11 @@ public class TSClient implements Client {
     }
 
     @Override
+    public int getId() {
+        return 0;
+    }
+
+    @Override
     public UniqueIdentifier getIdentifier() {
         return this.identifier;
     }

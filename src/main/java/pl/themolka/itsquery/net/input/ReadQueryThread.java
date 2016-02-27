@@ -24,7 +24,7 @@ public class ReadQueryThread extends Thread {
             Socket socket = this.tsQuery.getSocket();
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), this.tsQuery.getEncoding()));
 
-            String line = null;
+            String line;
             while (this.tsQuery.isRunning() && !socket.isClosed() && (line = reader.readLine()) != null) {
                 if (line.isEmpty()) {
                     continue;

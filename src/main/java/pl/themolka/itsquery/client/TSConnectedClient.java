@@ -18,6 +18,7 @@ public class TSConnectedClient implements ConnectedClient {
     private String country;
     private final int databaseId;
     private String description;
+    private final int id;
     private final UniqueIdentifier identifier;
     private boolean muted;
     private Platform platform;
@@ -29,10 +30,11 @@ public class TSConnectedClient implements ConnectedClient {
     private String username;
     private String version;
 
-    public TSConnectedClient(TSQuery tsQuery, int databaseId, UniqueIdentifier identifier) {
+    public TSConnectedClient(TSQuery tsQuery, int databaseId, int id, UniqueIdentifier identifier) {
         this.tsQuery = tsQuery;
 
         this.databaseId = databaseId;
+        this.id = id;
         this.identifier = identifier;
     }
 
@@ -84,6 +86,11 @@ public class TSConnectedClient implements ConnectedClient {
     @Override
     public String getDescription() {
         return this.description;
+    }
+
+    @Override
+    public int getId() {
+        return this.id;
     }
 
     @Override
@@ -183,11 +190,79 @@ public class TSConnectedClient implements ConnectedClient {
 
     @Override
     public void sendMessage(Message message) {
-
+        this.sendMessage(message.getMessage());
     }
 
     @Override
     public void sendMessage(String message) {
+        this.tsQuery.getOutputHandler().sendTextMessage(3, this.id, message); // should be 1
+    }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof ConnectedClient) {
+            return ((ConnectedClient) obj).getIdentifier().equals(this.getIdentifier());
+        }
+        return false;
+    }
+
+    public void setAway(boolean away) {
+        this.away = away;
+    }
+
+    public void setAwayMessage(String awayMessage) {
+        this.awayMessage = awayMessage;
+    }
+
+    public void setChannel(Channel channel) {
+        this.channel = channel;
+    }
+
+    public void setChannelCommander(boolean channelCommander) {
+        this.channelCommander = channelCommander;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setMuted(boolean muted) {
+        this.muted = muted;
+    }
+
+    public void setPlatform(Platform platform) {
+        this.platform = platform;
+    }
+
+    public void setPrioritySpeaker(boolean prioritySpeaker) {
+        this.prioritySpeaker = prioritySpeaker;
+    }
+
+    public void setRecording(boolean recording) {
+        this.recording = recording;
+    }
+
+    public void setTalkPower(int talkPower) {
+        this.talkPower = talkPower;
+    }
+
+    public void setTalkRequest(int talkRequest) {
+        this.talkRequest = talkRequest;
+    }
+
+    public void setTalkRequestMessage(String talkRequestMessage) {
+        this.talkRequestMessage = talkRequestMessage;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 }

@@ -37,7 +37,7 @@ public class QueryDataParser {
                     }
 
                     parameters.put(keyValue[0], encoder.decode(keyValue[1]));
-                } else {
+                } else if (arg.startsWith("-")) {
                     options.add(arg);
                 }
             }

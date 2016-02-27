@@ -7,7 +7,7 @@ public class InputEventErrorEvent extends InputErrorEvent {
     private final String notifyName;
 
     public InputEventErrorEvent(DataContainer data, String notifyName) {
-        super(InputErrorEvent.INPUT_EVENT_ID, null);
+        super(0, null);
 
         this.data = data;
         this.notifyName = notifyName;

@@ -2,11 +2,18 @@ package pl.themolka.itsquery.query;
 
 import pl.themolka.iserverquery.ServerQuery;
 import pl.themolka.iserverquery.command.CommandSystem;
+import pl.themolka.iserverquery.command.Console;
 import pl.themolka.iserverquery.event.EventSystem;
-import pl.themolka.iserverquery.query.*;
+import pl.themolka.iserverquery.io.ResponseListener;
+import pl.themolka.iserverquery.query.QueryLoginEvent;
+import pl.themolka.iserverquery.query.QueryLogoutEvent;
+import pl.themolka.iserverquery.query.QuerySelectEvent;
+import pl.themolka.iserverquery.query.QueryStartEvent;
+import pl.themolka.iserverquery.query.QueryStopEvent;
 import pl.themolka.iserverquery.server.Server;
 import pl.themolka.iserverquery.text.QueryTextEncoding;
 import pl.themolka.iserverquery.util.Platform;
+import pl.themolka.iserverquery.util.ShutdownHook;
 import pl.themolka.itsquery.net.input.InputNetworkHandler;
 import pl.themolka.itsquery.net.input.ReadQueryThread;
 import pl.themolka.itsquery.net.output.OutputNetworkHandler;
@@ -23,23 +30,23 @@ public class TSQuery implements ServerQuery {
     public static final String VERSION = "1.0-SNAPSHOT";
 
     private final InetSocketAddress address;
-    private String build = BUILD;
+    protected String build = BUILD;
     private final CommandSystem commands;
+    private final Console console;
     private final Charset encoding;
     private final EventSystem events;
     private final String identifier;
     private final InputNetworkHandler inputHandler;
     private final OutputNetworkHandler outputHandler;
     private final Platform platform;
-    private final ReadQueryThread reader;
-    private final Server server;
-    private final Socket socket;
-    private final QueryTextEncoding textEncoding;
-    private String version = VERSION;
-    private final WriteQueryThread writer;
-
+    private ReadQueryThread reader;
     private boolean running;
-    private final Thread shutdownHook;
+    private final Server server;
+    private final ShutdownHook shutdownHook;
+    private Socket socket;
+    private final QueryTextEncoding textEncoding;
+    protected String version = VERSION;
+    private WriteQueryThread writer;
 
     public TSQuery(String identifier, String host, int port) throws IOException {
         this(null, identifier, host, port);
@@ -55,24 +62,17 @@ public class TSQuery implements ServerQuery {
 
         this.address = new InetSocketAddress(host, port);
         this.commands = new CommandSystem(this);
+        this.console = new Console(this);
         this.encoding = encoding;
         this.events = new EventSystem(identifier);
         this.identifier = identifier;
         this.inputHandler = new InputNetworkHandler(this);
         this.outputHandler = new OutputNetworkHandler(this);
         this.platform = Platform.system();
-        this.reader = new ReadQueryThread(this);
         this.server = new TSServer(this);
-        this.socket = new Socket();
+        this.shutdownHook = new ShutdownHook(this);
         this.textEncoding = new QueryTextEncoding();
-        this.writer = new WriteQueryThread(this);
 
-        this.shutdownHook = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                TSQuery.this.stop();
-            }
-        }, identifier + " Shutdown Thread");
         Runtime.getRuntime().addShutdownHook(this.getShutdownHook());
     }
 
@@ -84,6 +84,11 @@ public class TSQuery implements ServerQuery {
     @Override
     public CommandSystem getCommands() {
         return this.commands;
+    }
+
+    @Override
+    public Console getConsole() {
+        return this.console;
     }
 
     @Override
@@ -117,6 +122,11 @@ public class TSQuery implements ServerQuery {
     }
 
     @Override
+    public ShutdownHook getShutdownHook() {
+        return this.shutdownHook;
+    }
+
+    @Override
     public Socket getSocket() {
         return this.socket;
     }
@@ -124,6 +134,11 @@ public class TSQuery implements ServerQuery {
     @Override
     public QueryTextEncoding getTextEncoding() {
         return this.textEncoding;
+    }
+
+    @Override
+    public boolean isRunning() {
+        return this.running;
     }
 
     @Override
@@ -140,6 +155,16 @@ public class TSQuery implements ServerQuery {
         this.getEvents().post(event);
 
         this.getOutputHandler().logout();
+    }
+
+    @Override
+    public void query(String query) {
+        this.getOutputHandler().executeRaw(query);
+    }
+
+    @Override
+    public void registerResponse(String command, ResponseListener listener) {
+        this.getInputHandler().registerResponse(command, listener);
     }
 
     @Override
@@ -163,13 +188,17 @@ public class TSQuery implements ServerQuery {
         this.getEvents().post(event);
 
         try {
+            this.socket = new Socket();
             this.socket.connect(this.getHost());
         } catch (Throwable ex) {
             ex.printStackTrace();
         }
 
-        this.getReader().start();
-        this.getWriter().start();
+        this.reader = new ReadQueryThread(this);
+        this.reader.start();
+
+        this.writer = new WriteQueryThread(this);
+        this.writer.start();
     }
 
     @Override
@@ -211,24 +240,8 @@ public class TSQuery implements ServerQuery {
         return this.reader;
     }
 
-    public Thread getShutdownHook() {
-        return this.shutdownHook;
-    }
-
     public WriteQueryThread getWriter() {
         return this.writer;
-    }
-
-    public boolean isRunning() {
-        return this.running;
-    }
-
-    public void setBuild(String build) {
-        this.build = build;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
     }
 
     private void select(int serverId, int port, boolean virtual) {
@@ -246,5 +259,10 @@ public class TSQuery implements ServerQuery {
         }
 
         this.getOutputHandler().use(preparedServerId, preparedPort, event.isVirtual());
+
+        this.query("servernotifyregister event=channel id=0");
+        this.query("servernotifyregister event=server");
+        this.query("servernotifyregister event=textprivate");
+        this.query("servernotifyregister event=textserver");
     }
 }

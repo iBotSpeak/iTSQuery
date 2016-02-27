@@ -33,7 +33,7 @@ public class WriteQueryThread extends Thread {
                     ex.printStackTrace();
                 }
             }
-        } catch (IOException io) {
+        } catch (Throwable ex) {
 
         }
     }
@@ -47,12 +47,8 @@ public class WriteQueryThread extends Thread {
     }
 
     public void submit(BufferedWriter writer, String query) throws IOException {
-        try {
-            writer.write(query);
-            writer.newLine();
-            writer.flush();
-        } catch (Throwable ex) {
-            ex.printStackTrace();
-        }
+        writer.write(query);
+        writer.newLine();
+        writer.flush();
     }
 }

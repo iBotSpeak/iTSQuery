@@ -39,7 +39,7 @@ public class OutputNetworkHandler implements INetworkHandler {
             }
         }
 
-        this.tsQuery.getWriter().addQuery(command + builder.toString());
+        this.executeRaw(command + builder.toString());
     }
 
     public final void execute(String command) {
@@ -52,6 +52,10 @@ public class OutputNetworkHandler implements INetworkHandler {
 
     public final void execute(String command, Map<String, Object> data, Map<String, Boolean> options) {
         this.execute(command, DataContainer.createOutput(data, options));
+    }
+
+    public final void executeRaw(String query) {
+        this.tsQuery.getWriter().addQuery(query);
     }
 
     public final Map<String, Object> createData() {
