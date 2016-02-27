@@ -31,7 +31,7 @@ public class QueryDataParser {
                 String arg = data[i];
 
                 if (arg.contains("=")) {
-                    String[] keyValue = arg.split("=");
+                    String[] keyValue = arg.split("=", 2);
                     if (keyValue.length != 2) {
                         continue;
                     }

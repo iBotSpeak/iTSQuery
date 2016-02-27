@@ -29,6 +29,9 @@ public class TSQuery implements ServerQuery {
     public static final String BUILD = "Unknown";
     public static final String VERSION = "1.0-SNAPSHOT";
 
+    public static final Charset DEFAULT_CHARSET = Charset.defaultCharset();
+    public static final String DEFAULT_IDENTIFIER = "Default";
+
     private final InetSocketAddress address;
     protected String build = BUILD;
     private final CommandSystem commands;
@@ -54,10 +57,10 @@ public class TSQuery implements ServerQuery {
 
     public TSQuery(Charset encoding, String identifier, String host, int port) throws IOException {
         if (encoding == null) {
-            encoding = Charset.defaultCharset();
+            encoding = DEFAULT_CHARSET;
         }
         if (identifier == null) {
-            identifier = "Default";
+            identifier = DEFAULT_IDENTIFIER;
         }
 
         this.address = new InetSocketAddress(host, port);
@@ -258,11 +261,12 @@ public class TSQuery implements ServerQuery {
             preparedPort = OutputNetworkHandler.NONE;
         }
 
-        this.getOutputHandler().use(preparedServerId, preparedPort, event.isVirtual());
+        OutputNetworkHandler output = this.getOutputHandler();
+        output.use(preparedServerId, preparedPort, event.isVirtual());
 
-        this.query("servernotifyregister event=channel id=0");
-        this.query("servernotifyregister event=server");
-        this.query("servernotifyregister event=textprivate");
-        this.query("servernotifyregister event=textserver");
+        output.serverNotifyRegister("channel", 0);
+        output.serverNotifyRegister("server", OutputNetworkHandler.NONE);
+        output.serverNotifyRegister("textprivate", OutputNetworkHandler.NONE);
+        output.serverNotifyRegister("textserver", OutputNetworkHandler.NONE);
     }
 }
