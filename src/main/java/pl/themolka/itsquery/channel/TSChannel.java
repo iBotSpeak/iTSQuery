@@ -7,7 +7,9 @@ import pl.themolka.iserverquery.util.Callback;
 import pl.themolka.itsquery.query.TSQuery;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class TSChannel implements Channel {
@@ -39,22 +41,26 @@ public class TSChannel implements Channel {
 
     @Override
     public void fetchData() {
-
+        this.fetchData(null);
     }
 
     @Override
-    public void fetchData(Callback callback) {
+    public void fetchData(final Callback callback) {
+        if (callback != null) {
 
+        }
+
+        this.tsQuery.getOutputHandler().channelInfo(this.getId());
     }
 
     @Override
     public void updateData() {
-
+        this.updateData(null);
     }
 
     @Override
     public void updateData(Callback callback) {
-
+        Map<String, Object> data = new HashMap<>();
     }
 
     @Override

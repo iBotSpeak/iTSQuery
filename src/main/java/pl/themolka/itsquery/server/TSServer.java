@@ -15,6 +15,7 @@ import java.util.Set;
 public class TSServer implements Server {
     protected final TSQuery tsQuery;
 
+    private final Set<Channel> channels = new HashSet<>();
     private final Set<ConnectedClient> connectedClients = new HashSet<>();
     private Channel defaultChannel;
     private int reservedSlots;
@@ -50,14 +51,32 @@ public class TSServer implements Server {
         return null;
     }
 
+
     @Override
     public Channel getChannel(int id) {
+        for (Channel channel : this.getChannels()) {
+            if (channel.getId() == id) {
+                return channel;
+            }
+        }
+
         return null;
     }
 
     @Override
     public Channel getChannel(String name) {
+        for (Channel channel : this.getChannels()) {
+            if (channel.getName().equals(name)) {
+                return channel;
+            }
+        }
+
         return null;
+    }
+
+    @Override
+    public Collection<Channel> getChannels() {
+        return new HashSet<>(this.channels);
     }
 
     @Override
@@ -123,12 +142,24 @@ public class TSServer implements Server {
         return this.slots;
     }
 
+    public void registerChannel(Channel channel) {
+        if (this.channels.contains(channel)) {
+            return;
+        }
+
+        this.channels.add(channel);
+    }
+
     public void registerClient(ConnectedClient client) {
         if (this.connectedClients.contains(client)) {
             return;
         }
 
         this.connectedClients.add(client);
+    }
+
+    public void unregisterChannel(Channel channel) {
+        this.channels.remove(channel);
     }
 
     public void unregisterClient(ConnectedClient client) {

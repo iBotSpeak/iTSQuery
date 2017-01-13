@@ -195,7 +195,7 @@ public class TSConnectedClient implements ConnectedClient {
 
     @Override
     public void sendMessage(String message) {
-        this.tsQuery.getOutputHandler().sendTextMessage(3, this.id, message); // should be 1
+        this.tsQuery.getOutputHandler().sendTextMessage(1, this.id, message);
     }
 
     @Override

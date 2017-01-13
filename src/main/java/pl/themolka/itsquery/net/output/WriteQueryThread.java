@@ -15,7 +15,7 @@ public class WriteQueryThread extends Thread {
     private final BlockingQueue<String> queryQueue = new ArrayBlockingQueue<>(1024);
 
     public WriteQueryThread(TSQuery tsQuery) {
-        super(tsQuery.getIdentifier() + " Write Thread");
+        super(tsQuery.toString() + " Write Thread");
 
         this.tsQuery = tsQuery;
     }

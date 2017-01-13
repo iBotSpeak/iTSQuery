@@ -61,8 +61,8 @@ public class OutputNetworkHandler implements INetworkHandler {
         this.execute(command, DataContainer.createOutput(data, options));
     }
 
-    public final void executeRaw(String query) {
-        this.tsQuery.getWriter().addQuery(query);
+    public final boolean executeRaw(String query) {
+        return this.tsQuery.getWriter().addQuery(query);
     }
 
     public final Data createData() {

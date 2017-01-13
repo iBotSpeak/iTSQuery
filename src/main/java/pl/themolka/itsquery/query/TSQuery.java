@@ -1,10 +1,10 @@
 package pl.themolka.itsquery.query;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import pl.themolka.iserverquery.ServerQuery;
 import pl.themolka.iserverquery.command.CommandSystem;
 import pl.themolka.iserverquery.command.Console;
 import pl.themolka.iserverquery.event.EventSystem;
-import pl.themolka.iserverquery.io.ResponseListener;
 import pl.themolka.iserverquery.query.QueryLoginEvent;
 import pl.themolka.iserverquery.query.QueryLogoutEvent;
 import pl.themolka.iserverquery.query.QuerySelectEvent;
@@ -28,47 +28,40 @@ import java.nio.charset.Charset;
 public class TSQuery implements ServerQuery {
     public static final String BUILD = "Unknown";
     public static final String VERSION = "1.0-SNAPSHOT";
-
     public static final Charset DEFAULT_CHARSET = Charset.defaultCharset();
-    public static final String DEFAULT_IDENTIFIER = "Default";
 
-    private final InetSocketAddress address;
     protected String build = BUILD;
-    private final CommandSystem commands;
-    private final Console console;
-    private final Charset encoding;
-    private final EventSystem events;
-    private final String identifier;
-    private final InputNetworkHandler inputHandler;
-    private final OutputNetworkHandler outputHandler;
-    private final Platform platform;
-    private ReadQueryThread reader;
-    private boolean running;
-    private final Server server;
-    private final ShutdownHook shutdownHook;
-    private Socket socket;
-    private final QueryTextEncoding textEncoding;
+    protected CommandSystem commands;
+    protected Console console;
+    protected Charset encoding;
+    protected EventSystem events;
+    protected InetSocketAddress host;
+    protected InputNetworkHandler inputHandler;
+    protected OutputNetworkHandler outputHandler;
+    protected Platform platform;
+    protected ReadQueryThread reader;
+    protected boolean running;
+    protected Server server;
+    protected ShutdownHook shutdownHook;
+    protected Socket socket;
+    protected QueryTextEncoding textEncoding;
     protected String version = VERSION;
-    private WriteQueryThread writer;
+    protected WriteQueryThread writer;
 
-    public TSQuery(String identifier, String host, int port) throws IOException {
-        this(null, identifier, host, port);
+    public TSQuery(String host, int port) throws IOException {
+        this(null, host, port);
     }
 
-    public TSQuery(Charset encoding, String identifier, String host, int port) throws IOException {
+    public TSQuery(Charset encoding, String host, int port) throws IOException {
         if (encoding == null) {
             encoding = DEFAULT_CHARSET;
         }
-        if (identifier == null) {
-            identifier = DEFAULT_IDENTIFIER;
-        }
 
-        this.address = new InetSocketAddress(host, port);
         this.commands = new CommandSystem(this);
         this.console = new Console(this);
         this.encoding = encoding;
-        this.events = new EventSystem(identifier);
-        this.identifier = identifier;
+        this.events = new EventSystem();
+        this.host = new InetSocketAddress(host, port);
         this.inputHandler = new InputNetworkHandler(this);
         this.outputHandler = new OutputNetworkHandler(this);
         this.platform = Platform.system();
@@ -106,12 +99,7 @@ public class TSQuery implements ServerQuery {
 
     @Override
     public InetSocketAddress getHost() {
-        return this.address;
-    }
-
-    @Override
-    public String getIdentifier() {
-        return this.identifier;
+        return this.host;
     }
 
     @Override
@@ -163,11 +151,6 @@ public class TSQuery implements ServerQuery {
     @Override
     public void query(String query) {
         this.getOutputHandler().executeRaw(query);
-    }
-
-    @Override
-    public void registerResponse(String command, ResponseListener listener) {
-        this.getInputHandler().registerResponse(command, listener);
     }
 
     @Override
@@ -245,6 +228,13 @@ public class TSQuery implements ServerQuery {
 
     public WriteQueryThread getWriter() {
         return this.writer;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append(this.host)
+                .build();
     }
 
     private void select(int serverId, int port, boolean virtual) {

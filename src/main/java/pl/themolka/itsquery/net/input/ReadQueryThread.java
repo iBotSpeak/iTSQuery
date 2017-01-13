@@ -1,5 +1,7 @@
 package pl.themolka.itsquery.net.input;
 
+import pl.themolka.iserverquery.command.CommandContext;
+import pl.themolka.iserverquery.query.QueryResponseEvent;
 import pl.themolka.itsquery.net.DataContainer;
 import pl.themolka.itsquery.net.QueryData;
 import pl.themolka.itsquery.query.TSQuery;
@@ -13,7 +15,7 @@ public class ReadQueryThread extends Thread {
     protected final TSQuery tsQuery;
 
     public ReadQueryThread(TSQuery tsQuery) {
-        super(tsQuery.getIdentifier() + " Read Thread");
+        super(tsQuery.toString() + " Read Thread");
 
         this.tsQuery = tsQuery;
     }
@@ -36,8 +38,11 @@ public class ReadQueryThread extends Thread {
                         continue;
                     }
 
-                    String command = contexts[0].getCommand().getCommand();
-                    this.tsQuery.getInputHandler().execute(command, DataContainer.createInput(contexts));
+                    DataContainer container = DataContainer.createInput(contexts);
+                    CommandContext[] contextArray = container.toArray(new CommandContext[container.size()]);
+
+                    this.tsQuery.getEvents().post(new QueryResponseEvent(this.tsQuery, line, contextArray));
+                    this.tsQuery.getInputHandler().execute(line, container);
                 } catch (Throwable ex) {
                     ex.printStackTrace();
                 }
